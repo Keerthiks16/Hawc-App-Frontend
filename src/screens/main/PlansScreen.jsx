@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -63,11 +65,7 @@ const PriceCard = ({
   ];
 
   return (
-    <TouchableOpacity
-      style={[cardStyle, { backgroundColor: "black" }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={0.7}>
       {isRecommended && (
         <View style={styles.recommendedBadge}>
           <Text style={styles.recommendedText}>Recommended</Text>
@@ -77,7 +75,7 @@ const PriceCard = ({
         <View style={radioOuterStyle}>
           {isSelected && <View style={radioInnerStyle} />}
         </View>
-        <Text style={[titleStyle, { color: "white" }]}>{title}</Text>
+        <Text style={titleStyle}>{title}</Text>
       </View>
       <View style={styles.priceContainer}>
         <Text style={priceStyle}>
@@ -140,6 +138,7 @@ const SubjectSelectionCard = ({
 const PlansScreen = () => {
   const { colors, isDarkTheme } = useTheme();
   const styles = getStyles(colors);
+  const navigation = useNavigation();
 
   const [selectedPlanId, setSelectedPlanId] = useState("free");
   const [selectedSubjects, setSelectedSubjects] = useState({
@@ -199,10 +198,10 @@ const PlansScreen = () => {
 
   const calculateTotalPrice = () => {
     const selectedPlan = plans.find((p) => p.id === selectedPlanId);
-    if (!selectedPlan || selectedPlan.price === "0") return "0";
+    if (!selectedPlan || selectedPlan.price === "0") return 0; // Return number
     const numberOfSelectedSubjects =
       Object.values(selectedSubjects).filter(Boolean).length;
-    if (numberOfSelectedSubjects === 0) return "0";
+    if (numberOfSelectedSubjects === 0) return 0; // Return number
     const basePrice = parseInt(selectedPlan.price.replace(/[^0-9]/g, ""));
     let calculatedPrice = 0;
     if (
@@ -230,6 +229,31 @@ const PlansScreen = () => {
       default:
         return "help-circle-outline";
     }
+  };
+
+  const handleCheckout = () => {
+    const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+    const selectedSubjectsList = Object.keys(selectedSubjects).filter(
+      (key) => selectedSubjects[key]
+    );
+
+    if (
+      !selectedPlan ||
+      selectedSubjectsList.length === 0 ||
+      currentTotalPrice === 0
+    ) {
+      Alert.alert(
+        "Selection incomplete",
+        "Please select a paid plan and at least one subject to proceed."
+      );
+      return;
+    }
+
+    navigation.navigate("Checkout", {
+      plan: selectedPlan,
+      subjects: selectedSubjectsList,
+      totalPrice: currentTotalPrice,
+    });
   };
 
   return (
@@ -348,15 +372,15 @@ const PlansScreen = () => {
                 pricing)
               </Text>
 
-              <TouchableOpacity style={styles.checkoutButton}>
-                {/* <LinearGradient
-                  colors={colors.gradients.primary}
+              <TouchableOpacity onPress={handleCheckout}>
+                <LinearGradient
+                  colors={["#65c7f7", "#034289"]} // Example gradient, you can use your theme
                   style={styles.checkoutButton}
-                > */}
-                <Text style={styles.checkoutButtonText}>
-                  Continue to Checkout (₹ {currentTotalPrice})
-                </Text>
-                {/* </LinearGradient> */}
+                >
+                  <Text style={styles.checkoutButtonText}>
+                    Continue to Checkout (₹ {currentTotalPrice})
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
@@ -374,23 +398,22 @@ const getStyles = (colors) =>
     },
     scrollContent: {
       padding: 15,
+      paddingTop: 0,
       backgroundColor: "transparent",
     },
     toggleContainer: {
       flexDirection: "row",
-      backgroundColor: "transparent",
+      backgroundColor: colors.card,
       borderRadius: 25,
       padding: 4,
       alignSelf: "center",
       marginTop: 15,
       marginBottom: 20,
-      gap: 15,
     },
     toggleButton: {
       paddingVertical: 8,
       paddingHorizontal: 20,
       borderRadius: 20,
-      backgroundColor: colors.card,
     },
     toggleButtonActive: {
       backgroundColor: "#65c7f7",
@@ -401,31 +424,29 @@ const getStyles = (colors) =>
       fontSize: 14,
     },
     toggleButtonTextActive: {
-      color: colors.textDecorationLine,
+      color: "#01486bfc",
       fontWeight: "bold",
       fontSize: 14,
     },
     card: {
-      backgroundColor: colors.card,
+      backgroundColor: "black", // Updated based on your image
       borderRadius: 20,
       padding: 20,
       marginBottom: 15,
-      // borderWidth: 1,
-      borderColor: colors.border,
+      borderWidth: 3,
+      borderColor: "transparent",
     },
     selectedCardDark: {
       borderColor: "#65c7f7",
-      borderWidth: 3,
     },
     selectedCardLight: {
       borderColor: "#65c7f7",
-      borderWidth: 3,
       backgroundColor: colors.text,
     },
     recommendedBadge: {
       position: "absolute",
       top: -10,
-      left: 20,
+      right: 20,
       backgroundColor: "#65c7f7",
       paddingHorizontal: 10,
       paddingVertical: 3,
@@ -447,22 +468,22 @@ const getStyles = (colors) =>
       width: 20,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: colors.textSecondary,
+      borderColor: "white", // Updated
       justifyContent: "center",
       alignItems: "center",
       marginRight: 10,
     },
     radioOuterSelected: {
-      borderColor: colors.primary,
+      borderColor: "#65c7f7",
     },
     radioInner: {
       height: 10,
       width: 10,
       borderRadius: 5,
-      backgroundColor: colors.primary,
+      backgroundColor: "#65c7f7",
     },
     cardTitle: {
-      color: colors.text,
+      color: "white",
       fontSize: 16,
       fontWeight: "bold",
     },
@@ -491,14 +512,14 @@ const getStyles = (colors) =>
       color: colors.textSecondary,
     },
     offPercentage: {
-      color: colors.primary,
+      color: "lightgreen", // As per screenshot
       fontWeight: "bold",
     },
     freePeriodText: {
       marginLeft: 30,
       fontSize: 12,
       fontWeight: "600",
-      color: colors.accent,
+      color: "lightgreen", // As per screenshot
     },
     subjectSelectionSection: {
       backgroundColor: colors.backgroundMuted,
@@ -517,14 +538,13 @@ const getStyles = (colors) =>
       marginBottom: 20,
     },
     subjectSelectionTitle: {
-      color: colors.text,
+      color: colors.primary,
       fontSize: 18,
       fontWeight: "bold",
     },
     selectAllButton: {
       flexDirection: "row",
       alignItems: "center",
-      paddingTop: 35,
     },
     selectAllText: {
       color: colors.text,
@@ -532,7 +552,7 @@ const getStyles = (colors) =>
       fontSize: 14,
     },
     subjectCard: {
-      backgroundColor: colors.primaryMuted,
+      backgroundColor: colors.primary,
       borderRadius: 10,
       padding: 20,
       marginBottom: 15,
@@ -550,7 +570,7 @@ const getStyles = (colors) =>
       marginBottom: 5,
     },
     subjectName: {
-      color: colors.text,
+      color: colors.card,
       fontSize: 16,
       fontWeight: "bold",
     },
@@ -566,7 +586,7 @@ const getStyles = (colors) =>
       marginBottom: 5,
     },
     totalPriceText: {
-      color: colors.text,
+      color: colors.primary,
       fontSize: 16,
       fontWeight: "bold",
     },
@@ -587,7 +607,6 @@ const getStyles = (colors) =>
       borderRadius: 8,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "#65c7f7",
     },
     checkoutButtonText: {
       color: "#01486bfc",

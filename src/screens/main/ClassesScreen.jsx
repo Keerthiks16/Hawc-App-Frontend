@@ -1,30 +1,21 @@
-import { useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
-import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useContext, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import CourseCard from "../../components/student/CourseCard";
-import LiveClassCard from "../../components/student/LiveClassCard"; // Import the new card
-import { AuthContext } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useContext, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CourseCard from '../../components/student/CourseCard';
+import LiveClassCard from '../../components/student/LiveClassCard';
+import { AuthContext } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ClassesScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const { userToken } = useContext(AuthContext);
+  const navigation = useNavigation(); // Get the navigation object
 
   const [courses, setCourses] = useState([]);
-  const [liveClasses, setLiveClasses] = useState([]); // State for live classes
+  const [liveClasses, setLiveClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,35 +25,35 @@ const ClassesScreen = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Use Promise.all to fetch both sets of data in parallel
       const [coursesResponse, liveClassesResponse] = await Promise.all([
-        axios.get("http://lms.hawc.in/api/student/mycourses", {
-          headers: { Authorization: `Bearer ${userToken}` },
+        axios.get('http://lms.hawc.in/api/student/mycourses', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
         }),
-        axios.get("http://lms.hawc.in/api/student/myclasses", {
-          headers: { Authorization: `Bearer ${userToken}` },
-        }),
+        axios.get('http://lms.hawc.in/api/student/myclasses', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        })
       ]);
 
       if (coursesResponse.data.success) {
         setCourses(coursesResponse.data.data.student_courses);
       } else {
-        throw new Error("Failed to fetch courses.");
+        throw new Error('Failed to fetch courses.');
       }
-
+      
       if (liveClassesResponse.data.success) {
         setLiveClasses(liveClassesResponse.data.data.liveClasses);
       } else {
-        throw new Error("Failed to fetch live classes.");
+        throw new Error('Failed to fetch live classes.');
       }
+
     } catch (e) {
-      setError(e.message || "An error occurred.");
+      setError(e.message || 'An error occurred.');
       console.error("Fetch data error:", e);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -74,32 +65,29 @@ const ClassesScreen = () => {
   };
 
   const handleLiveClassPress = (liveClass) => {
-    Alert.alert("Live Class Tapped", `You tapped on ${liveClass.short_name}`);
+    if (liveClass.token && liveClass.token[0] && liveClass.meeting_id) {
+      navigation.navigate('DyteMeeting', {
+        authToken: liveClass.token[0],
+        meetingId: liveClass.meeting_id,
+      });
+    } else {
+      Alert.alert("Error", "Meeting details are not available for this class.");
+    }
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <LinearGradient
-          colors={colors.gradients.appGradient}
-          style={StyleSheet.absoluteFill}
-        />
-        <ActivityIndicator
-          size="large"
-          color={colors.primary}
-          style={{ flex: 1 }}
-        />
-      </SafeAreaView>
+        <SafeAreaView style={styles.safeArea}>
+            <LinearGradient colors={colors.gradients.appGradient} style={StyleSheet.absoluteFill} />
+            <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1 }} />
+        </SafeAreaView>
     );
   }
 
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <LinearGradient
-          colors={colors.gradients.appGradient}
-          style={StyleSheet.absoluteFill}
-        />
+        <LinearGradient colors={colors.gradients.appGradient} style={StyleSheet.absoluteFill} />
         <View style={styles.centerContainer}>
           <Text style={styles.errorText}>Failed to load data.</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
@@ -117,51 +105,39 @@ const ClassesScreen = () => {
         style={StyleSheet.absoluteFill}
       />
       <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.title}>My Library</Text>
-        </View>
-
-        {/* Live Classes Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Live Classes</Text>
-          {liveClasses.length > 0 ? (
-            <FlatList
-              data={liveClasses}
-              renderItem={({ item }) => (
-                <LiveClassCard
-                  liveClass={item}
-                  onPress={() => handleLiveClassPress(item)}
+          <View style={styles.header}>
+            <Text style={styles.title}>My Library</Text>
+          </View>
+          
+          <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Live Classes</Text>
+              {liveClasses.length > 0 ? (
+                <FlatList
+                    data={liveClasses}
+                    renderItem={({ item }) => <LiveClassCard liveClass={item} onPress={() => handleLiveClassPress(item)} />}
+                    keyExtractor={(item) => item.id.toString()}
+                    scrollEnabled={false}
                 />
+              ) : (
+                <Text style={styles.emptyText}>No live classes scheduled.</Text>
               )}
-              keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false} // Disable scroll for the inner list
-            />
-          ) : (
-            <Text style={styles.emptyText}>No live classes scheduled.</Text>
-          )}
-        </View>
+          </View>
 
-        {/* My Courses Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Courses</Text>
-          {courses.length > 0 ? (
-            <FlatList
-              data={courses}
-              renderItem={({ item }) => (
-                <CourseCard
-                  course={item}
-                  onPress={() => handleCoursePress(item)}
+          <View style={styles.section}>
+              <Text style={styles.sectionTitle}>My Courses</Text>
+              {courses.length > 0 ? (
+                <FlatList
+                    data={courses}
+                    renderItem={({ item }) => <CourseCard course={item} onPress={() => handleCourse-press(item)} />}
+                    keyExtractor={(item) => item.course_id.toString()}
+                    scrollEnabled={false}
                 />
+              ) : (
+                <Text style={styles.emptyText}>
+                  You are not enrolled in any courses yet.
+                </Text>
               )}
-              keyExtractor={(item) => item.course_id.toString()}
-              scrollEnabled={false} // Disable scroll for the inner list
-            />
-          ) : (
-            <Text style={styles.emptyText}>
-              You are not enrolled in any courses yet.
-            </Text>
-          )}
-        </View>
+          </View>
       </ScrollView>
     </SafeAreaView>
   );
