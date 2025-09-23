@@ -6,13 +6,7 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "pre-install": ["echo legacy-peer-deps=true > .npmrc"]
-      },
-      "ios": {
-        "pre-install": ["echo legacy-peer-deps=true > .npmrc"]
-      }
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal"
