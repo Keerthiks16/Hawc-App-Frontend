@@ -18,17 +18,17 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "permissions": [],
-      "package": "com.keerthik.hawc3"
+      "package": "com.keerthik.hawc3",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -42,15 +42,13 @@
         }
       ],
       "expo-secure-store",
-      "react-native-video",
-      "expo-asset"
+      "expo-dev-client",
+      "react-native-reanimated/plugin"
     ],
     "experiments": {
-      "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
       "eas": {
         "projectId": "ce344945-1d48-4723-8840-bf9ec2f2bd93"
       }
