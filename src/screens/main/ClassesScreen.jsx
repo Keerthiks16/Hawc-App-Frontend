@@ -1,30 +1,31 @@
-import { useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
-import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useContext, useState } from "react";
+import React, { useState, useCallback, useContext } from "react";
 import {
-  ActivityIndicator,
-  Alert,
+  View,
+  Text,
+  StyleSheet,
   FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  Alert,
 } from "react-native";
-import CourseCard from "../../components/student/CourseCard";
-import LiveClassCard from "../../components/student/LiveClassCard"; // Import the new card
-import { AuthContext } from "../../contexts/AuthContext";
+import { LinearGradient } from "expo-linear-gradient";
+import axios from "axios";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../contexts/ThemeContext";
+import { AuthContext } from "../../contexts/AuthContext";
+import CourseCard from "../../components/student/CourseCard";
+import LiveClassCard from "../../components/student/LiveClassCard";
 
 const ClassesScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
-  const { userToken } = useContext(AuthContext);
+  const { userToken, userInfo } = useContext(AuthContext);
+  const navigation = useNavigation();
 
   const [courses, setCourses] = useState([]);
-  const [liveClasses, setLiveClasses] = useState([]); // State for live classes
+  const [liveClasses, setLiveClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,7 +35,6 @@ const ClassesScreen = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Use Promise.all to fetch both sets of data in parallel
       const [coursesResponse, liveClassesResponse] = await Promise.all([
         axios.get("http://lms.hawc.in/api/student/mycourses", {
           headers: { Authorization: `Bearer ${userToken}` },
@@ -73,8 +73,33 @@ const ClassesScreen = () => {
     Alert.alert("Course Tapped", `You tapped on ${course.course_name}`);
   };
 
-  const handleLiveClassPress = (liveClass) => {
-    Alert.alert("Live Class Tapped", `You tapped on ${liveClass.short_name}`);
+  const handleLiveClassPress = async (liveClass) => {
+    try {
+      // Using your computer's IP address to connect to the local token server
+      const SERVER_URL = `http://192.168.1.5:5000/getToken`;
+
+      const response = await axios.post(SERVER_URL, {
+        roomName: liveClass.meeting_id,
+        identity: userInfo?.name || "student",
+      });
+
+      const { token } = response.data;
+
+      if (token) {
+        navigation.navigate("LiveKitMeeting", {
+          authToken: token,
+          meetingId: liveClass.meeting_id,
+        });
+      } else {
+        throw new Error("Received an invalid token from the server.");
+      }
+    } catch (e) {
+      console.error("Failed to get LiveKit token:", e);
+      Alert.alert(
+        "Error",
+        "Could not connect to the live class. Is your local token server running?"
+      );
+    }
   };
 
   if (isLoading) {
@@ -121,7 +146,6 @@ const ClassesScreen = () => {
           <Text style={styles.title}>My Library</Text>
         </View>
 
-        {/* Live Classes Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Live Classes</Text>
           {liveClasses.length > 0 ? (
@@ -134,14 +158,13 @@ const ClassesScreen = () => {
                 />
               )}
               keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false} // Disable scroll for the inner list
+              scrollEnabled={false}
             />
           ) : (
             <Text style={styles.emptyText}>No live classes scheduled.</Text>
           )}
         </View>
 
-        {/* My Courses Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Courses</Text>
           {courses.length > 0 ? (
@@ -154,7 +177,7 @@ const ClassesScreen = () => {
                 />
               )}
               keyExtractor={(item) => item.course_id.toString()}
-              scrollEnabled={false} // Disable scroll for the inner list
+              scrollEnabled={false}
             />
           ) : (
             <Text style={styles.emptyText}>

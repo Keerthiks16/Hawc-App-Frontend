@@ -9,6 +9,7 @@ import NoteEditorScreen from "../screens/main/NoteEditorScreen";
 import AppDrawer from "./AppDrawer"; // Student Drawer
 import AuthNavigator from "./AuthNavigator";
 import LecturerDrawer from "./LecturerDrawer"; // Lecturer Drawer
+import LiveKitMeetingScreen from "../screens/main/LiveKitMeetingScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,10 @@ const RootNavigator = () => {
           {/* These screens are shared and can be opened from either role */}
           <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />
           <Stack.Screen name="NoteEditor" component={NoteEditorScreen} />
+          <Stack.Screen
+            name="LiveKitMeeting"
+            component={LiveKitMeetingScreen}
+          />
         </>
       ) : (
         // User is not logged in, show the auth flow

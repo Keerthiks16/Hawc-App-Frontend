@@ -42,8 +42,7 @@
         }
       ],
       "expo-secure-store",
-      "expo-dev-client",
-      "react-native-reanimated/plugin"
+      "expo-dev-client"
     ],
     "experiments": {
       "reactCompiler": true
