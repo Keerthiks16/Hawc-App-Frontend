@@ -10,6 +10,7 @@ import HomeScreen from "../screens/main/HomeScreen";
 import PlansScreen from "../screens/main/PlansScreen"; // Corrected typo from PlansSceen
 import TestScreen from "../screens/main/TestScreen";
 import WeeklyScreen from "../screens/main/WeeklyScreen";
+import LiveKitTestScreen from "../screens/main/LiveKitTestScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -34,6 +35,8 @@ const BottomTabNavigator = () => {
             iconName = focused ? "calendar" : "calendar-outline";
           } else if (route.name === "Classes") {
             iconName = focused ? "book" : "book-outline";
+          } else if (route.name === "Live Class") {
+            iconName = focused ? "videocam" : "videocam-outline";
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -49,6 +52,7 @@ const BottomTabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Classes" component={ClassesScreen} />
+      <Tab.Screen name="Live Class" component={LiveKitTestScreen} />
       <Tab.Screen name="Test" component={TestScreen} />
       <Tab.Screen name="Plans" component={PlansScreen} />
       <Tab.Screen name="Weekly" component={WeeklyScreen} />

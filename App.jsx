@@ -1,9 +1,10 @@
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "./src/contexts/AuthContext";
-import { ThemeProvider } from "./src/contexts/ThemeContext"; // 1. Import ThemeProvider
 import RootNavigator from "./src/navigation/RootNavigator";
+import { StatusBar } from "expo-status-bar";
+import { AuthProvider } from "./src/contexts/AuthContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ThemeProvider } from "./src/contexts/ThemeContext";
 
 export default function App() {
   return (
@@ -12,8 +13,8 @@ export default function App() {
         <ThemeProvider>
           <NavigationContainer>
             <RootNavigator />
-            <StatusBar style="dark" />
           </NavigationContainer>
+          <StatusBar style="auto" />
         </ThemeProvider>
       </AuthProvider>
     </SafeAreaProvider>

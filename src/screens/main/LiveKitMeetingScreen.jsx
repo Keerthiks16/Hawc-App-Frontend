@@ -18,8 +18,11 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 
+// --- Helper Component to render a single participant ---
 const ParticipantView = ({ participant }) => {
   const { colors } = useTheme();
+  // Pass colors to the styles function
+  const styles = getStyles(colors);
   const { cameraPublication, microphonePublication } =
     useParticipant(participant);
   const isVideoAvailable =
@@ -59,9 +62,12 @@ const ParticipantView = ({ participant }) => {
   );
 };
 
+// --- Helper Component for the main meeting UI and controls ---
 const MeetingUI = () => {
   const { room, participants, localParticipant } = useRoom();
   const navigation = useNavigation();
+  const { colors } = useTheme(); // Get colors here too for the controls
+  const styles = getStyles(colors);
 
   const { isCameraEnabled, isMicrophoneEnabled } =
     useParticipant(localParticipant);
@@ -104,7 +110,7 @@ const MeetingUI = () => {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onDisconnect}
-          style={[styles.controlButton, { backgroundColor: "#EF4444" }]}
+          style={[styles.controlButton, { backgroundColor: colors.error }]} // Use theme color
         >
           <Ionicons name="call" size={28} color="white" />
         </TouchableOpacity>
@@ -118,9 +124,8 @@ const LiveKitMeetingScreen = () => {
   const navigation = useNavigation();
   const { colors } = useTheme();
 
-  const { authToken } = route.params || {};
+  const { authToken, meetingId } = route.params || {};
 
-  // NOTE: I am using the URL you provided.
   const LIVEKIT_URL = "wss://conference-gxcqthti.livekit.cloud";
 
   if (!authToken) {
@@ -141,7 +146,7 @@ const LiveKitMeetingScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={getStyles(colors).container}>
       <LiveKitRoom
         token={authToken}
         serverUrl={LIVEKIT_URL}
@@ -149,60 +154,69 @@ const LiveKitMeetingScreen = () => {
         video={true}
         onDisconnected={() => navigation.goBack()}
       >
+        {console.log(
+          "Rendering Meeting UI with token:",
+          authToken,
+          "and meetingId:",
+          meetingId
+        )}
         <MeetingUI />
+        {console.log("Rendered Meeting UI")}
       </LiveKitRoom>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  videoGrid: { flex: 1 },
-  participantContainer: {
-    width: "50%",
-    height: "50%",
-    position: "relative",
-    borderWidth: 1,
-    borderColor: "#1a1a1a",
-  },
-  videoView: { width: "100%", height: "100%" },
-  participantName: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    color: "white",
-    fontWeight: "bold",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    fontSize: 12,
-  },
-  muteIconContainer: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 15,
-    padding: 4,
-  },
-  controlsContainer: {
-    position: "absolute",
-    bottom: 40,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-  },
-  controlButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+// --- FIX: Convert the StyleSheet into a function that accepts colors ---
+const getStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#000" },
+    videoGrid: { flex: 1 },
+    participantContainer: {
+      width: "50%",
+      height: "50%",
+      position: "relative",
+      borderWidth: 1,
+      borderColor: "#1a1a1a",
+    },
+    videoView: { width: "100%", height: "100%" },
+    participantName: {
+      position: "absolute",
+      bottom: 8,
+      left: 8,
+      color: "white",
+      fontWeight: "bold",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      fontSize: 12,
+    },
+    muteIconContainer: {
+      position: "absolute",
+      top: 8,
+      left: 8,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      borderRadius: 15,
+      padding: 4,
+    },
+    controlsContainer: {
+      position: "absolute",
+      bottom: 40,
+      left: 0,
+      right: 0,
+      flexDirection: "row",
+      justifyContent: "space-evenly",
+      alignItems: "center",
+    },
+    controlButton: {
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });
 
 export default LiveKitMeetingScreen;
